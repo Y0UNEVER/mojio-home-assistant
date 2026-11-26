@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mojio",
+        "description": "Sign in with the e-mail and password of your Mojio account. Client ID and secret belong to your operator's Mojio app.",
+        "data": {
+          "username": "E-mail",
+          "password": "Password",
+          "client_id": "Client ID",
+          "client_secret": "Client secret",
+          "domain": "Operator domain (e.g. tmobile-cz)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid credentials",
+      "cannot_connect": "Cannot connect to Mojio"
+    },
+    "abort": {
+      "already_configured": "Account is already configured",
+      "invalid_auth": "Invalid credentials",
+      "cannot_connect": "Cannot connect to Mojio"
+    }
+  }
+}
