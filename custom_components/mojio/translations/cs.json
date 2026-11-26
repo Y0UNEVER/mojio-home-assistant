@@ -22,5 +22,11 @@
       "invalid_auth": "Neplatné přihlašovací údaje",
       "cannot_connect": "Nelze se spojit s Mojio"
     }
+  },
+  "services": {
+    "get_trips": {
+      "name": "Načíst jízdy",
+      "description": "Vrátí všechny jízdy uložené v cloudu Mojio (pro knihu jízd / doplnění historie)."
+    }
   }
 }

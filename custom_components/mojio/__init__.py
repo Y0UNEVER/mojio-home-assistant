@@ -1,6 +1,9 @@
 """Mojio connected car integration (UI configured)."""
 from __future__ import annotations
 
+from datetime import date, datetime
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -12,7 +15,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, SupportsResponse
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -41,8 +45,46 @@ CONFIG_SCHEMA = vol.Schema(
 type MojioConfigEntry = ConfigEntry[MojioCoordinator]
 
 
+_SECRET_KEYS = ("api", "session", "token", "password", "secret", "client")
+
+
+def _serialize(obj: Any, depth: int = 0) -> Any:
+    """Turn SDK objects into JSON-friendly data (without credentials)."""
+    if depth > 6:
+        return str(obj)
+    if obj is None or isinstance(obj, (bool, int, float, str)):
+        return obj
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {
+            str(k): _serialize(v, depth + 1)
+            for k, v in obj.items()
+            if not any(s in str(k).lower() for s in _SECRET_KEYS)
+        }
+    if isinstance(obj, (list, tuple, set)):
+        return [_serialize(v, depth + 1) for v in obj]
+    if hasattr(obj, "__dict__"):
+        return _serialize(vars(obj), depth + 1)
+    return str(obj)
+
+
+async def _async_get_trips(call: ServiceCall) -> ServiceResponse:
+    """Return all trips the Mojio cloud provides for every configured account."""
+    hass = call.hass
+    trips: list[Any] = []
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        coordinator: MojioCoordinator = entry.runtime_data
+        raw = await hass.async_add_executor_job(coordinator.api.get_trips)
+        trips.extend(_serialize(list(raw or [])))
+    return {"count": len(trips), "trips": trips}
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import a legacy YAML block into a config entry."""
+    """Register services and import a legacy YAML block into a config entry."""
+    hass.services.async_register(
+        DOMAIN, "get_trips", _async_get_trips, supports_response=SupportsResponse.ONLY
+    )
     if DOMAIN in config:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -64,3 +106,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MojioConfigEntry) -> boo
 async def async_unload_entry(hass: HomeAssistant, entry: MojioConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: MojioConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Allow removing a vehicle that is no longer reported by the account."""
+    current = set((entry.runtime_data.data or {}).keys())
+    return not any(
+        domain == DOMAIN and vehicle_id in current
+        for domain, vehicle_id in device_entry.identifiers
+    )

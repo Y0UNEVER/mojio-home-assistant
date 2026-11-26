@@ -22,5 +22,11 @@
       "invalid_auth": "Invalid credentials",
       "cannot_connect": "Cannot connect to Mojio"
     }
+  },
+  "services": {
+    "get_trips": {
+      "name": "Get trips",
+      "description": "Returns all trips stored in the Mojio cloud (for a trip log / backfill)."
+    }
   }
 }
