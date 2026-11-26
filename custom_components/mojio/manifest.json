@@ -1,6 +1,10 @@
 {
   "domain": "mojio",
   "name": "Mojio",
+  "categories": [
+    "vehicles_transport.cars_evs",
+    "presence_location.trackers"
+  ],
   "codeowners": [
     "@karzikk"
   ],
