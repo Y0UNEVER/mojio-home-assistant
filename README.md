@@ -19,7 +19,7 @@ Based on the original legacy component by [Simon Tenbeitel](https://github.com/s
 ## Installation
 
 ### Marketplace (recommended)
-1. Settings → Marketplace → **Add from link** → `https://github.com/karzikk/mojio-home-assistant`
+1. Settings → Marketplace → **Add from link** → `https://github.com/Y0UNEVER/mojio-home-assistant`
 2. Install **Mojio**, restart Home Assistant.
 
 ### Manual

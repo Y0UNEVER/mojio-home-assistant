@@ -26,7 +26,13 @@
   "services": {
     "get_trips": {
       "name": "Načíst jízdy",
-      "description": "Vrátí všechny jízdy uložené v cloudu Mojio (pro knihu jízd / doplnění historie)."
+      "description": "Vrátí jízdy uložené v cloudu Mojio, od nejnovější (data z API vč. adres a tachometru).",
+      "fields": {
+        "limit": {
+          "name": "Limit",
+          "description": "Maximální počet jízd."
+        }
+      }
     }
   }
 }

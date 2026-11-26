@@ -69,21 +69,56 @@ def _serialize(obj: Any, depth: int = 0) -> Any:
     return str(obj)
 
 
+_PAGE = 100
+_DROP_KEYS = ("Polyline", "OwnerId", "Links", "Permissions")
+
+
+def _fetch_trips(api: Any, limit: int) -> list[dict[str, Any]]:
+    """Page through /v2/trips (newest first) up to ``limit`` trips."""
+    styles = (("top", "skip"), ("$top", "$skip"))
+    for top_key, skip_key in styles:
+        trips: list[dict[str, Any]] = []
+        skip = 0
+        while len(trips) < limit:
+            size = min(_PAGE, limit - len(trips))
+            data = api._get_response(f"trips?{top_key}={size}&{skip_key}={skip}")  # noqa: SLF001
+            page = (data or {}).get("Data") or []
+            trips.extend(page)
+            if len(page) < size:
+                break
+            skip += size
+        # The API ignores unknown paging keys and returns its default page
+        # (10 trips) – then try the other syntax.
+        if len(trips) > 10 or top_key == styles[-1][0]:
+            return trips[:limit]
+    return []
+
+
 async def _async_get_trips(call: ServiceCall) -> ServiceResponse:
-    """Return all trips the Mojio cloud provides for every configured account."""
+    """Return trips from the Mojio cloud (newest first) for every configured account."""
     hass = call.hass
+    limit = int(call.data.get("limit", 1000))
     trips: list[Any] = []
     for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         coordinator: MojioCoordinator = entry.runtime_data
-        raw = await hass.async_add_executor_job(coordinator.api.get_trips)
-        trips.extend(_serialize(list(raw or [])))
+        raw = await hass.async_add_executor_job(_fetch_trips, coordinator.api, limit)
+        for trip in raw:
+            trips.append(
+                _serialize({k: v for k, v in trip.items() if k not in _DROP_KEYS})
+            )
     return {"count": len(trips), "trips": trips}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register services and import a legacy YAML block into a config entry."""
     hass.services.async_register(
-        DOMAIN, "get_trips", _async_get_trips, supports_response=SupportsResponse.ONLY
+        DOMAIN,
+        "get_trips",
+        _async_get_trips,
+        schema=vol.Schema(
+            {vol.Optional("limit", default=1000): vol.All(int, vol.Range(min=1, max=5000))}
+        ),
+        supports_response=SupportsResponse.ONLY,
     )
     if DOMAIN in config:
         hass.async_create_task(

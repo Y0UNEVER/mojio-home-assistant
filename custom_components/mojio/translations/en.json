@@ -26,7 +26,13 @@
   "services": {
     "get_trips": {
       "name": "Get trips",
-      "description": "Returns all trips stored in the Mojio cloud (for a trip log / backfill)."
+      "description": "Returns trips stored in the Mojio cloud, newest first (raw API data incl. addresses and odometer).",
+      "fields": {
+        "limit": {
+          "name": "Limit",
+          "description": "Maximum number of trips."
+        }
+      }
     }
   }
 }
