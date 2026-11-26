@@ -2,13 +2,13 @@
   "domain": "mojio",
   "name": "Mojio",
   "codeowners": [
-    "@GITHUB_USER"
+    "@karzikk"
   ],
   "config_flow": true,
-  "documentation": "https://github.com/GITHUB_USER/mojio-home-assistant",
+  "documentation": "https://github.com/karzikk/mojio-home-assistant",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/GITHUB_USER/mojio-home-assistant/issues",
+  "issue_tracker": "https://github.com/karzikk/mojio-home-assistant/issues",
   "requirements": [
     "mojio_sdk==0.6.0"
   ],
